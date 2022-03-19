@@ -1,3 +1,6 @@
+#include<cmath>
+#include<iostream>
+#include<stdexcept>
+
 #include"orderBook.hpp"
 
-unsigned int order::globalOrderId = 0;

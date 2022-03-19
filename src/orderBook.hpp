@@ -1,60 +1,43 @@
 #pragma once
 
 #include<chrono>
-#include<string>
+#include<list>
 #include<map>
+#include<string>
+#include<vector>
+#include<unordered_map>
+
 #include"enum.hpp"
+#include"orderGenerator.hpp"
 
-class Price4
+
+
+
+
+class orderPool
 {
 private:
-    long m_unscaled;
+    std::vector<order> m_orderPool;    // orderId -> order
 
 public:
-    Price4() = default;
-    long unscaled() { return m_unscaled; };
+    orderPool() = default;
+    
+    // add an order, which has a positive remaining quantity after matching, to the pool
+    void add(const order& ord);
 
-    explicit Price4(long unscaled): m_unscaled(unscaled) {};
+    // remove an order from the pool
+    void remove(uint64_t orderId);
 
-    // Convert from string
-    explicit Price4(const std::string& str);
-
-    // Convert to string
-    std::string to_str() const;  
-};
-
-class order
-{
-private:
-    // A global incrementing order id
-    static unsigned int globalOrderId;
-
-    unsigned int m_orderId;
-    std::chrono::time_point<std::chrono::system_clock> m_timeStamp;
-    orderType m_orderType;
-    ticker m_symbol; 
-    orderSide m_orderSide;
-    int m_quantity;
-    Price4 m_limitPrice;
-
-public:
-    order() = default;
-    order(std::chrono::time_point<std::chrono::system_clock> timeStamp, orderType oT, ticker symbol, orderSide os, int quantity, Price4 limitPrice): 
-        m_orderId(globalOrderId++), 
-        m_timeStamp(timeStamp),
-        m_orderType(oT),
-        m_symbol(symbol),
-        m_orderSide(os),
-        m_quantity(quantity),
-        m_limitPrice(limitPrice)
-        {};
+    // modify an order's quantity in the pool
+    void modify(uint64_t orderId, int64_t quantity);
 };
 
 class orderBook
 {
 private:
-    std::map<Price4, int> asks;
-    std::map<Price4, int, std::greater<Price4>> bids;
+    std::map<Price4, std::list<uint64_t>> m_asks;    // price -> linked list of orderId
+    std::map<Price4, std::list<uint64_t>, std::greater<Price4>> m_bids;    // price -> linked list of orderId
+    std::vector<std::list<uint64_t>::iterator> m_orderIt;    // orderId -> linked list iterator
 public:
     orderBook() = default;
     orderBook(order od);

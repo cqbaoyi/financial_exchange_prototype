@@ -10,10 +10,6 @@
 #include"enum.hpp"
 #include"orderGenerator.hpp"
 
-
-
-
-
 class orderPool
 {
 private:

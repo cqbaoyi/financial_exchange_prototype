@@ -1,7 +1,15 @@
 #include<iomanip>
+#include<nlohmann/json.hpp>
+
 #include"orderGenerator.hpp"
 
+using json = nlohmann::json;
 
+/*********************************
+
+Price4 implementation
+
+*********************************/
 Price4::Price4(const std::string& s)
 {
     try
@@ -71,24 +79,43 @@ inline bool Price4::operator>=(const Price4& rhs) const
     return !(*this < rhs);
 }
 
-uint64_t order::globalOrderId = 0;
+/*********************************
 
-orderGenerator::orderGenerator(std::chrono::time_point<std::chrono::system_clock> timeStamp): m_timeStamp(timeStamp)
+orderGenerator implementation
+
+*********************************/
+uint64_t orderGenerator::globalOrderId = 0;
+
+orderGenerator::orderGenerator()
 {
     mt = std::mt19937(rd());
-    dist = std::uniform_int_distribution<int64_t>(0, 10000);
+    dist = std::lognormal_distribution<double>(5.0, 0.5);
+    m_symbol = lib::symbol::MSFT;
+    
+    // Assumption: The order starts to generate at 9:30am EST and ends at 4:00pm EST.
+    m_t_start = std::chrono::system_clock::now();
+    m_t_end = m_t_start + std::chrono::hours(6) + std::chrono::minutes(30);
+    const std::time_t t_s = std::chrono::system_clock::to_time_t(m_t_start);
+    const std::time_t t_e = std::chrono::system_clock::to_time_t(m_t_end);
+    std::cout << std::put_time(std::localtime(&t_s), "%F %T.") << std::endl;
+    std::cout << std::put_time(std::localtime(&t_e), "%F %T.") << std::endl;
 }
 
 void orderGenerator::run()
 {
-    std::fstream f("orderInputs.dat", std::ios::out);
+    std::fstream f("orderInputs.json", std::ios::out);
 
-    std::chrono::time_point<std::chrono::system_clock> t_start = std::chrono::system_clock::now();
-    std::chrono::time_point<std::chrono::system_clock> t_end = t_start + std::chrono::hours(6) + std::chrono::minutes(30);
+    double unscaled_price = dist(mt);
+    
+    json j = {
+        {"time", std::chrono::duration_cast<std::chrono::seconds>(m_t_start.time_since_epoch()).count()},
+        {"type", lib::orderType::NEW},
+        {"order_id", globalOrderId},
+        {"symbol", m_symbol},
+        {"side", lib::orderSide::ASK},
+        {"quantity", 1000},
+        {"limit_price", dist(mt)}
+    };
 
-    const std::time_t t_s = std::chrono::system_clock::to_time_t(t_start);
-    const std::time_t t_e = std::chrono::system_clock::to_time_t(t_end);
-    std::cout << std::put_time(std::localtime(&t_s), "%F %T.") << std::endl;
-    std::cout << std::put_time(std::localtime(&t_e), "%F %T.") << std::endl;
-    std::cout << dist(mt) << std::endl;
+    f << j << std::endl;
 }

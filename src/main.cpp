@@ -1,14 +1,19 @@
 #include<iostream>
 #include"orderBook.hpp"
+#include"orderGenerator.hpp"
+#include"orderReader.hpp"
 
 int main()
 {
     std::cout << "Market opens" << std::endl;
 
-    //orderBook ob;
+    std::string fileName = "orderInputs.json";
 
-    orderGenerator og;
-    og.run();
+    orderGenerator myOrderGenerator(fileName);
+    myOrderGenerator.run();
+
+    orderReader myOrderReader(fileName);
+    myOrderReader.run();
 
     std::cout << "Market closes" << std::endl;
 

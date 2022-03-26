@@ -8,7 +8,8 @@
 #include<unordered_map>
 
 #include"enum.hpp"
-#include"orderGenerator.hpp"
+#include"order.hpp"
+#include"Price4.hpp"
 
 class orderPool
 {

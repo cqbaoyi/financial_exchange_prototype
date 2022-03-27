@@ -4,7 +4,7 @@
 
 void order::print_info()
 {
-    std::cout << std::chrono::duration_cast<std::chrono::seconds>(m_timeStamp.time_since_epoch()).count() << "\n";
+    std::cout << std::chrono::duration_cast<Seconds>(m_timeStamp.time_since_epoch()).count() << "\n";
     std::cout << m_orderId << "\n";
     std::cout << m_orderType << "\n";
     std::cout << m_symbol << "\n";
@@ -16,7 +16,7 @@ void order::print_info()
 void to_json(json& j, const order& od)
 {
     j = json{
-        {"timeStamp", std::chrono::duration_cast<std::chrono::seconds>(od.get_time().time_since_epoch()).count()}, 
+        {"timeStamp", std::chrono::duration_cast<Seconds>(od.get_time().time_since_epoch()).count()}, 
         {"orderId", od.get_orderId()}, 
         {"orderType", od.get_orderType()}, 
         {"symbol", od.get_symbol()}, 
@@ -28,7 +28,7 @@ void to_json(json& j, const order& od)
 
 void from_json(const json& j, order& od)
 {
-    od.set_time() = std::chrono::system_clock::time_point(std::chrono::seconds(j.at("timeStamp")));
+    od.set_time() = Clock::time_point(Seconds(j.at("timeStamp")));
     j.at("orderId").get_to(od.set_orderId());
     j.at("orderType").get_to(od.set_orderType());
     j.at("symbol").get_to(od.set_symbol());

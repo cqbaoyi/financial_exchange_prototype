@@ -8,10 +8,13 @@
 
 using json = nlohmann::json;
 
+typedef std::chrono::seconds Seconds;
+typedef std::chrono::system_clock Clock;
+
 class order
 {
 private:
-    std::chrono::time_point<std::chrono::system_clock> m_timeStamp;
+    std::chrono::time_point<Clock> m_timeStamp;
     uint64_t m_orderId;
     lib::orderType m_orderType;
     lib::symbol m_symbol; 
@@ -21,13 +24,13 @@ private:
 
 public:
     order() = default;
-    order(const std::chrono::time_point<std::chrono::system_clock>& timeStamp,
+    order(const std::chrono::time_point<Clock>& timeStamp,
         uint64_t orderId, 
         const lib::orderType& oT, 
         const lib::symbol& symbol, 
-        const lib::orderSide& os, 
-        int64_t quantity, 
-        int64_t limitPrice): 
+        const lib::orderSide& os = lib::orderSide::NA, 
+        int64_t quantity = 0, 
+        int64_t limitPrice = 0): 
         m_timeStamp(timeStamp),
         m_orderId(orderId++), 
         m_orderType(oT),
@@ -38,7 +41,7 @@ public:
         {};
 
     // Getters
-    inline std::chrono::time_point<std::chrono::system_clock> get_time() const { return m_timeStamp; };
+    inline std::chrono::time_point<Clock> get_time() const { return m_timeStamp; };
 
     inline uint64_t get_orderId() const { return m_orderId; };
 

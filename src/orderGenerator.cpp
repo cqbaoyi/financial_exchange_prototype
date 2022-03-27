@@ -5,13 +5,13 @@
 #include"order.hpp"
 #include"orderGenerator.hpp"
 
-using json = nlohmann::json;
-
 /*********************************
 
 orderGenerator implementation
 
 *********************************/
+
+using namespace std::chrono_literals;
 
 // Set the initial global order ID to 0
 uint64_t orderGenerator::globalOrderId = 0;
@@ -23,32 +23,56 @@ double orderGenerator::cancelRatio = 0.5;
 orderGenerator::orderGenerator(const std::string& fileName): m_fileName(fileName)
 {
     m_gen = std::mt19937(rd());
-    m_dist = std::lognormal_distribution<double>(5.0, 0.1);
+    m_distReal = std::uniform_real_distribution<double>(0.0, 1.0);
+    m_distQuantity = std::binomial_distribution<int64_t>(2000, 0.5);
+    m_distPrice = std::lognormal_distribution<double>(5.0, 0.1);
     m_symbol = lib::symbol::MSFT;
     
     // The orders start to generate at 9:30am EST and ends at 4:00pm EST.
     // The starting time does not really matter in this project.
-    m_t_start = std::chrono::system_clock::now();
+    m_t_start = Clock::now();
     m_t_end = m_t_start + std::chrono::hours(6) + std::chrono::minutes(30);
-    const std::time_t t_s = std::chrono::system_clock::to_time_t(m_t_start);
-    const std::time_t t_e = std::chrono::system_clock::to_time_t(m_t_end);
-    std::cout << std::put_time(std::localtime(&t_s), "%F %T.") << std::endl;
-    std::cout << std::put_time(std::localtime(&t_e), "%F %T.") << std::endl;
+    //const std::time_t t_s = Clock::to_time_t(m_t_start);
+    //const std::time_t t_e = Clock::to_time_t(m_t_end);
+    //std::cout << std::put_time(std::localtime(&t_s), "%F %T.") << std::endl;
+    //std::cout << std::put_time(std::localtime(&t_e), "%F %T.") << std::endl;
+}
+
+inline lib::orderType orderGenerator::genOrderType()
+{
+    return m_distReal(m_gen) < cancelRatio? lib::orderType::CANCEL: lib::orderType::NEW;
+}
+
+inline lib::orderSide orderGenerator::genOrderSide()
+{
+    // Assume half of the orders are bid orders.
+    return m_distReal(m_gen) < 0.5? lib::orderSide::ASK: lib::orderSide::BID;
+}
+
+inline int64_t orderGenerator::genQuantity()
+{
+    return m_distQuantity(m_gen);
 }
 
 inline int64_t orderGenerator::genPrice()
 {
-    return static_cast<int64_t>(m_dist(m_gen)) * PowScale4;
+    return static_cast<int64_t>(m_distPrice(m_gen) * PowScale4);
 }
 
 void orderGenerator::run()
 {
     std::fstream f(m_fileName, std::ios::out);
 
-    int64_t unscaled_price = genPrice();
-    order myOrder(std::chrono::system_clock::now(), 0, lib::orderType::NEW, m_symbol, lib::orderSide::ASK, 10, unscaled_price);
-
-    json j = myOrder;
-
-    f << j << std::endl;
+    order myOrder;
+    // For simplicity, generate one order per second
+    for (auto t = m_t_start; t <= m_t_end; t += 1s)
+    {
+        lib::orderType orderType = genOrderType();
+        if (orderType == lib::orderType::NEW)
+            myOrder = order(t, globalOrderId++, orderType, m_symbol, genOrderSide(), genQuantity(), genPrice());
+        else
+            myOrder = order(t, globalOrderId++, orderType, m_symbol);
+        json j = myOrder;
+        f << j << std::endl;
+    }
 }

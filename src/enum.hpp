@@ -1,5 +1,8 @@
 #pragma once
 
+#include<array>
+#include<string>
+
 namespace lib
 {
     enum class orderType {
@@ -14,6 +17,7 @@ namespace lib
         ASK = 2,
     };
 
+    constexpr uint32_t N_symbol = 6;
     enum class symbol {
         NA = 0,
         AAPL = 1,
@@ -22,6 +26,8 @@ namespace lib
         AVGO = 4,
         CSCO = 5,
     };
+
+    static std::array<std::string, N_symbol> symbolStr = {"NA", "AAPL", "MSFT", "NVDA", "AVGO", "CSCO"};
 }
 
 inline std::ostream& operator<<(std::ostream & os, lib::orderType & orderType)

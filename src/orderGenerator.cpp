@@ -14,19 +14,20 @@ orderGenerator implementation
 using namespace std::chrono_literals;
 
 // Set the initial global order ID to 0
-uint64_t orderGenerator::globalOrderId = 0;
+orderIdType orderGenerator::globalOrderId = 0;
 
 // Table 1 from A. Subrahmanyam and H. Zheng, 2016, Limit order placement by high-frequency traders
 // About half of the orders are cancel orders.
 double orderGenerator::cancelRatio = 0.5;
 
-orderGenerator::orderGenerator(const std::string& fileName): m_fileName(fileName)
+orderGenerator::orderGenerator(lib::symbol symbol): m_symbol(symbol)
 {
+    m_fileName = "orders_" + lib::symbolStr[static_cast<uint32_t>(symbol)] + ".json";
+
     m_gen = std::mt19937(rd());
     m_distReal = std::uniform_real_distribution<double>(0.0, 1.0);
     m_distQuantity = std::binomial_distribution<int64_t>(2000, 0.5);
     m_distPrice = std::lognormal_distribution<double>(5.0, 0.1);
-    m_symbol = lib::symbol::MSFT;
     
     // The orders start to generate at 9:30am EST and ends at 4:00pm EST.
     // The starting time does not really matter in this project.
@@ -59,6 +60,13 @@ inline int64_t orderGenerator::genPrice()
     return static_cast<int64_t>(m_distPrice(m_gen) * PowScale4);
 }
 
+inline orderIdType orderGenerator::genCancelOrderId()
+{
+    // The cancel order id should be an used order id.
+    m_distOrderId = std::uniform_int_distribution<orderIdType>(0, globalOrderId - 1);
+    return m_distOrderId(m_gen);
+}
+
 void orderGenerator::run()
 {
     std::fstream f(m_fileName, std::ios::out);
@@ -71,7 +79,7 @@ void orderGenerator::run()
         if (orderType == lib::orderType::NEW)
             myOrder = order(t, globalOrderId++, orderType, m_symbol, genOrderSide(), genQuantity(), genPrice());
         else
-            myOrder = order(t, globalOrderId++, orderType, m_symbol);
+            myOrder = order(t, genCancelOrderId(), orderType);
         json j = myOrder;
         f << j << std::endl;
     }

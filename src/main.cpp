@@ -8,12 +8,12 @@ int main()
 {
     std::cout << "Market opens" << std::endl;
 
-    std::string fileName = "orderInputs.json";
+    lib::symbol symbol = lib::symbol::MSFT;
 
-    orderGenerator myOrderGenerator(fileName);
+    orderGenerator myOrderGenerator(symbol);
     myOrderGenerator.run();
 
-    orderReader myOrderReader(fileName);
+    orderReader myOrderReader(symbol);
     myOrderReader.run();
 
     std::cout << "Market closes" << std::endl;

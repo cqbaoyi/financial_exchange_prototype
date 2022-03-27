@@ -7,16 +7,16 @@
 #include"order.hpp"
 
 
-// The orderGenerator now only generates the orders into one single file.
+// The orderGenerator is used to generate orders but not required by this project.
+// It generates the orders and write into one single json file.
 class orderGenerator
 {
 private:
     static constexpr int64_t PowScale4 = 10000LL;
 
     // A global incrementing order id
-    static uint64_t globalOrderId;
+    static orderIdType globalOrderId;
 
-    // Limit order placement by high-frequency traders
     static double cancelRatio;
 
     std::string m_fileName;
@@ -28,8 +28,10 @@ private:
     std::uniform_real_distribution<double> m_distReal;
     std::binomial_distribution<int64_t> m_distQuantity;
     std::lognormal_distribution<double> m_distPrice;
+    std::uniform_int_distribution<orderIdType> m_distOrderId;
 
-    // Randomly generate: orderType, orderSide, quantity, and limit price
+    // Randomly generate: orderId (cancel), orderType, orderSide, quantity, and limit price
+    inline orderIdType genCancelOrderId();
     inline lib::orderType genOrderType();
     inline lib::orderSide genOrderSide();
     inline int64_t genQuantity();
@@ -37,6 +39,6 @@ private:
 
 public:
     orderGenerator() = default;
-    orderGenerator(const std::string& fileName);
+    orderGenerator(lib::symbol symbol);
     void run();
 };

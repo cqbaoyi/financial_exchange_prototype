@@ -6,16 +6,17 @@
 #include"enum.hpp"
 #include"Price4.hpp"
 
-using json = nlohmann::json;
+using json = nlohmann::ordered_json;
 
 typedef std::chrono::seconds Seconds;
 typedef std::chrono::system_clock Clock;
+typedef uint64_t orderIdType;
 
 class order
 {
 private:
     std::chrono::time_point<Clock> m_timeStamp;
-    uint64_t m_orderId;
+    orderIdType m_orderId;
     lib::orderType m_orderType;
     lib::symbol m_symbol; 
     lib::orderSide m_orderSide;
@@ -25,9 +26,9 @@ private:
 public:
     order() = default;
     order(const std::chrono::time_point<Clock>& timeStamp,
-        uint64_t orderId, 
+        orderIdType orderId, 
         const lib::orderType& oT, 
-        const lib::symbol& symbol, 
+        const lib::symbol& symbol = lib::symbol::NA, 
         const lib::orderSide& os = lib::orderSide::NA, 
         int64_t quantity = 0, 
         int64_t limitPrice = 0): 
@@ -43,7 +44,7 @@ public:
     // Getters
     inline std::chrono::time_point<Clock> get_time() const { return m_timeStamp; };
 
-    inline uint64_t get_orderId() const { return m_orderId; };
+    inline orderIdType get_orderId() const { return m_orderId; };
 
     inline lib::orderType get_orderType() const { return m_orderType; };
 
@@ -58,7 +59,7 @@ public:
     // Setters
     inline std::chrono::time_point<std::chrono::system_clock>& set_time() { return m_timeStamp; };
 
-    inline uint64_t& set_orderId() { return m_orderId; };
+    inline orderIdType& set_orderId() { return m_orderId; };
 
     inline lib::orderType& set_orderType() { return m_orderType; };
 

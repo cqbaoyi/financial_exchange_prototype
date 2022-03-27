@@ -5,9 +5,10 @@
 class orderReader
 {
 private:
+    lib::symbol m_symbol;
     std::string m_fileName;
 public:
     orderReader() = default;
-    orderReader(const std::string& fileName);
+    orderReader(lib::symbol symbol);
     void run();
 };

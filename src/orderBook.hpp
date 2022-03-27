@@ -23,18 +23,19 @@ public:
     void add(const order& ord);
 
     // remove an order from the pool
-    void remove(uint64_t orderId);
+    void remove(orderIdType orderId);
 
-    // modify an order's quantity in the pool
-    void modify(uint64_t orderId, int64_t quantity);
+    // TODO: modify an order's quantity in the pool
+    // The modified order obtains a new timeStamp and appends to the end of linked list of the price level.
+    void modify(orderIdType orderId, int64_t quantity);
 };
 
 class orderBook
 {
 private:
-    std::map<Price4, std::list<uint64_t>> m_asks;    // price -> linked list of orderId
-    std::map<Price4, std::list<uint64_t>, std::greater<Price4>> m_bids;    // price -> linked list of orderId
-    std::vector<std::list<uint64_t>::iterator> m_orderIt;    // orderId -> linked list iterator
+    std::map<Price4, std::list<orderIdType>> m_asks;    // price -> linked list of orderId
+    std::map<Price4, std::list<orderIdType>, std::greater<Price4>> m_bids;    // price -> linked list of orderId
+    std::vector<std::list<orderIdType>::iterator> m_orderIt;    // orderId -> linked list iterator
 public:
     orderBook() = default;
     orderBook(order od);

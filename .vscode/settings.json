@@ -55,6 +55,7 @@
         "codecvt": "cpp",
         "cstring": "cpp",
         "forward_list": "cpp",
-        "valarray": "cpp"
+        "valarray": "cpp",
+        "thread": "cpp"
     }
 }

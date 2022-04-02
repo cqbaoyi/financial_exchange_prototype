@@ -4,7 +4,7 @@
 #include<list>
 #include<map>
 #include<string>
-#include<vector>
+//#include<vector>
 #include<unordered_map>
 
 #include"enum.hpp"
@@ -53,7 +53,7 @@ private:
 
 public:
     orderBook() = default;
-    orderBook(lib::symbol symbol, orderPool& op);
+    explicit orderBook(lib::symbol symbol, orderPool& op);
 
     // Match an order against the other side of the book.
     // Return the remaining quantity if not fully filled.
@@ -66,7 +66,7 @@ public:
     void add(const order& od);
 
     // A cancel order is received or an existing order on the book is filled.
-    // O(1)
+    // Amortized O(1)
     template<typename T>
     void remove(orderIdType orderId);
 };
@@ -78,13 +78,13 @@ orderQuantityType orderBook::match(const order& od)
     orderQuantityType remaining_quantity = od.get_quantity();
     const Price4& p = od.get_Price4();
 
+    // TODO: keep track of the filled prices and use them for the market data publisher
     while(remaining_quantity && !curBook.empty() && priceCross(p, curBook))
     {
         auto& orders_this_level = (*curBook.begin()).second;
         auto it = orders_this_level.begin();
         while(remaining_quantity && it != orders_this_level.end())
         {
-            // TODO: keep track of the filled prices and use them for the market data publisher
             orderQuantityType q = (*m_orderPool)[*it].get_quantity();
             if (q <= remaining_quantity)
             {
@@ -134,15 +134,23 @@ void orderBook::add(const order& od)
 template<typename T>
 void orderBook::remove(orderIdType orderId)
 {
-    const order& od = (*m_orderPool)[orderId];
-    const Price4& p = od.get_Price4();
+    try
+    {
+        const order& od = (*m_orderPool)[orderId];
+        const Price4& p = od.get_Price4();
+        auto& curBook = getMap<T>();
 
-    auto& curBook = getMap<T>();
+        std::list<orderIdType>::iterator it = m_orderIt[orderId];
+        curBook[p].erase(it);
+        // Do not erase the price level
 
-    std::list<orderIdType>::iterator it = m_orderIt[orderId];
-    curBook[p].erase(it);
-    // Do not erase the price level
-
-    m_orderIt.erase(orderId);
-    (*m_orderPool).remove(orderId);
+        m_orderIt.erase(orderId);
+        (*m_orderPool).remove(orderId);
+    }
+    catch(const std::exception& e)
+    {
+        std::cerr << e.what() << '\n';
+    }
+    
+    
 }

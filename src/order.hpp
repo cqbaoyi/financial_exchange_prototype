@@ -28,7 +28,7 @@ private:
 
 public:
     order() = default;
-    order(const std::chrono::time_point<Clock>& timeStamp,
+    explicit order(const std::chrono::time_point<Clock>& timeStamp,
         orderIdType orderId, 
         const lib::orderType& oT, 
         const lib::symbol& symbol = lib::symbol::NA, 

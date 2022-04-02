@@ -6,14 +6,14 @@
 
 namespace lib
 {
-    enum class orderType {
+    enum class orderType: uint32_t {
         NA = 0,
         NEW = 1,
         CANCEL = 2,
     };
 
     constexpr uint32_t N_orderSide = 3;
-    enum class orderSide {
+    enum class orderSide: uint32_t {
         NA = 0,
         BID = 1,
         ASK = 2,
@@ -21,7 +21,7 @@ namespace lib
     static std::array<std::string, N_orderSide> orderSideStr = {"NA", "BID", "ASK"};
 
     constexpr uint32_t N_symbol = 6;
-    enum class symbol {
+    enum class symbol: uint32_t {
         NA = 0,
         AAPL = 1,
         MSFT = 2,

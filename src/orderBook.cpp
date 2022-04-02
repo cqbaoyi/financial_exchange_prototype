@@ -5,6 +5,12 @@
 
 #include"orderBook.hpp"
 
+/*****************************************************************
+ * 
+ * orderPool implementation
+ * 
+ *****************************************************************/
+
 void orderPool::reserve(orderIdType maxOrderId)
 {
     m_orders.reserve(maxOrderId);
@@ -44,6 +50,12 @@ const order& orderPool::operator[](orderIdType orderId)
 {
     return m_orders[orderId];
 }
+
+/*****************************************************************
+ * 
+ * orderBook implementation
+ * 
+ *****************************************************************/
 
 orderBook::orderBook(lib::symbol symbol, orderPool& op)
 {

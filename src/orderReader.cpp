@@ -5,8 +5,6 @@
 #include"order.hpp"
 #include"orderReader.hpp"
 
-using json = nlohmann::ordered_json;
-
 orderReader::orderReader(lib::symbol symbol): m_symbol(symbol)
 {
     m_fileName = "orders_" + lib::symbolStr[static_cast<uint32_t>(symbol)] + ".json";

@@ -5,11 +5,11 @@
 #include"order.hpp"
 #include"orderGenerator.hpp"
 
-/*********************************
-
-orderGenerator implementation
-
-*********************************/
+/*****************************************************************
+ * 
+ * orderGenerator implementation
+ * 
+ *****************************************************************/
 
 using namespace std::chrono_literals;
 

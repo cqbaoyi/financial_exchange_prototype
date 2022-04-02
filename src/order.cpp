@@ -28,11 +28,12 @@ void to_json(json& j, const order& od)
 
 void from_json(const json& j, order& od)
 {
-    od.set_time() = Clock::time_point(Seconds(j.at("timeStamp")));
-    j.at("orderId").get_to(od.set_orderId());
-    j.at("orderType").get_to(od.set_orderType());
-    j.at("symbol").get_to(od.set_symbol());
-    j.at("orderSide").get_to(od.set_orderSide());
-    j.at("quantity").get_to(od.set_quantity());
-    j.at("price").get_to(od.set_Price4());
+    // Use get_to methods rather than the order setter functions
+    od.m_timeStamp = Clock::time_point(Seconds(j.at("timeStamp")));
+    j.at("orderId").get_to(od.m_orderId);
+    j.at("orderType").get_to(od.m_orderType);
+    j.at("symbol").get_to(od.m_symbol);
+    j.at("orderSide").get_to(od.m_orderSide);
+    j.at("quantity").get_to(od.m_quantity);
+    j.at("price").get_to(od.m_limitPrice);
 }

@@ -11,11 +11,13 @@ namespace lib
         CANCEL = 2,
     };
 
+    constexpr uint32_t N_orderSide = 3;
     enum class orderSide {
         NA = 0,
         BID = 1,
         ASK = 2,
     };
+    static std::array<std::string, N_orderSide> orderSideStr = {"NA", "BID", "ASK"};
 
     constexpr uint32_t N_symbol = 6;
     enum class symbol {
@@ -26,7 +28,6 @@ namespace lib
         AVGO = 4,
         CSCO = 5,
     };
-
     static std::array<std::string, N_symbol> symbolStr = {"NA", "AAPL", "MSFT", "NVDA", "AVGO", "CSCO"};
 }
 

@@ -32,26 +32,6 @@ std::string Price4::to_str() const
     return res;
 }
 
-inline bool Price4::operator<(const Price4& rhs) const
-{
-    return m_unscaled < rhs.m_unscaled;
-}
-
-inline bool Price4::operator>(const Price4& rhs) const
-{
-    return rhs < *this;
-}
-
-inline bool Price4::operator<=(const Price4& rhs) const
-{
-    return !(*this > rhs);
-}
-
-inline bool Price4::operator>=(const Price4& rhs) const
-{
-    return !(*this < rhs);
-}
-
 void Price4::operator=(const std::string& s)
 {
     try

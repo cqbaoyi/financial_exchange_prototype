@@ -6,8 +6,6 @@
 
 int main()
 {
-    std::cout << "Market opens" << std::endl;
-
     lib::symbol symbol = lib::symbol::MSFT;
 
     orderGenerator myOrderGenerator(symbol);
@@ -15,8 +13,6 @@ int main()
 
     orderReader myOrderReader(symbol);
     myOrderReader.run();
-
-    std::cout << "Market closes" << std::endl;
 
     return 0;
 }

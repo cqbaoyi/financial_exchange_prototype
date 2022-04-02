@@ -23,16 +23,36 @@ public:
     inline int64_t unscaled() const { return m_unscaled; };
 
     // Overloading operators
-    inline bool operator==(const Price4& rhs) const;
-    inline bool operator!=(const Price4& rhs) const;
-    inline bool operator<(const Price4& rhs) const;
-    inline bool operator>(const Price4& rhs) const;
-    inline bool operator<=(const Price4& rhs) const;
-    inline bool operator>=(const Price4& rhs) const; 
+    bool operator==(const Price4& rhs) const;
+    bool operator!=(const Price4& rhs) const;
+    bool operator<(const Price4& rhs) const;
+    bool operator>(const Price4& rhs) const;
+    bool operator<=(const Price4& rhs) const;
+    bool operator>=(const Price4& rhs) const; 
 
     // To be compatible with nlohmann::json::get_to, operator= is overloaded.
     void operator=(const std::string& s);
 };
+
+inline bool Price4::operator<(const Price4& rhs) const
+{
+    return m_unscaled < rhs.m_unscaled;
+}
+
+inline bool Price4::operator>(const Price4& rhs) const
+{
+    return rhs < *this;
+}
+
+inline bool Price4::operator<=(const Price4& rhs) const
+{
+    return !(*this > rhs);
+}
+
+inline bool Price4::operator>=(const Price4& rhs) const
+{
+    return !(*this < rhs);
+}
 
 inline std::ostream& operator<<(std::ostream& os, const Price4& price4)
 {

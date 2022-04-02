@@ -26,7 +26,7 @@ orderGenerator::orderGenerator(lib::symbol symbol): m_symbol(symbol)
 
     m_gen = std::mt19937(rd());
     m_distReal = std::uniform_real_distribution<double>(0.0, 1.0);
-    m_distQuantity = std::binomial_distribution<int64_t>(2000, 0.5);
+    m_distQuantity = std::uniform_int_distribution<int64_t>(1, 1'000'000);
     m_distPrice = std::lognormal_distribution<double>(5.0, 0.1);
     
     // The orders start to generate at 9:30am EST and ends at 4:00pm EST.
@@ -62,9 +62,17 @@ inline int64_t orderGenerator::genPrice()
 
 inline orderIdType orderGenerator::genCancelOrderId()
 {
-    // The cancel order id should be an used order id.
-    m_distOrderId = std::uniform_int_distribution<orderIdType>(0, globalOrderId - 1);
-    return m_distOrderId(m_gen);
+    // The cancel order id should be an uncancelled order id.
+    orderIdType size_orderIds = m_orderIds.size();
+    m_distOrderId = std::uniform_int_distribution<orderIdType>(0, size_orderIds - 1);
+    auto it = m_orderIds.begin();
+    std::advance(it, m_distOrderId(m_gen));
+    orderIdType res = *it;
+    
+    // Take out the cancelled id
+    m_orderIds.erase(it);
+
+    return res;
 }
 
 void orderGenerator::run()
@@ -76,8 +84,11 @@ void orderGenerator::run()
     for (auto t = m_t_start; t <= m_t_end; t += 1s)
     {
         lib::orderType orderType = genOrderType();
-        if (orderType == lib::orderType::NEW)
+        if (m_orderIds.empty() || orderType == lib::orderType::NEW)
+        {
+            m_orderIds.insert(globalOrderId);
             myOrder = order(t, globalOrderId++, orderType, m_symbol, genOrderSide(), genQuantity(), genPrice());
+        }
         else
             myOrder = order(t, genCancelOrderId(), orderType);
         json j = myOrder;

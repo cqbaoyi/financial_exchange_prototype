@@ -2,6 +2,7 @@
 
 #include<chrono>
 #include<random>
+#include<unordered_set>
 
 #include"enum.hpp"
 #include"order.hpp"
@@ -26,9 +27,10 @@ private:
     std::random_device rd;
     std::mt19937 m_gen;
     std::uniform_real_distribution<double> m_distReal;
-    std::binomial_distribution<int64_t> m_distQuantity;
+    std::uniform_int_distribution<int64_t> m_distQuantity;
     std::lognormal_distribution<double> m_distPrice;
     std::uniform_int_distribution<orderIdType> m_distOrderId;
+    std::unordered_set<orderIdType> m_orderIds;
 
     // Randomly generate: orderId (cancel), orderType, orderSide, quantity, and limit price
     inline orderIdType genCancelOrderId();

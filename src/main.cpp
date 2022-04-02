@@ -6,10 +6,10 @@
 
 int main()
 {
-    //lib::symbol symbol = lib::symbol::MSFT;
+    lib::symbol symbol = lib::symbol::MSFT;
 
-    //orderGenerator myOrderGenerator(symbol);
-    //myOrderGenerator.run();
+    orderGenerator myOrderGenerator(symbol);
+    myOrderGenerator.run();
 
     //orderReader myOrderReader(symbol);
     //myOrderReader.run();

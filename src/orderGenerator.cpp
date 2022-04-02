@@ -50,7 +50,7 @@ inline lib::orderSide orderGenerator::genOrderSide()
     return m_distReal(m_gen) < 0.5? lib::orderSide::ASK: lib::orderSide::BID;
 }
 
-inline int64_t orderGenerator::genQuantity()
+inline orderQuantityType orderGenerator::genQuantity()
 {
     return m_distQuantity(m_gen);
 }

@@ -56,6 +56,7 @@
         "cstring": "cpp",
         "forward_list": "cpp",
         "valarray": "cpp",
-        "thread": "cpp"
+        "thread": "cpp",
+        "variant": "cpp"
     }
 }

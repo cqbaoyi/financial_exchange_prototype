@@ -5,7 +5,6 @@
 class matchingEngine
 {
 private:
-    orderPool m_orderPool;
     std::vector<std::unique_ptr<orderBook>> m_orderBooks;
 
 public:

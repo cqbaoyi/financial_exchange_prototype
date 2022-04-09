@@ -11,7 +11,7 @@
  * 
  *****************************************************************/
 
-void orderPool::reserve(orderIdType maxOrderId)
+orderPool::orderPool(orderIdType maxOrderId)
 {
     m_orders.reserve(maxOrderId);
 }
@@ -57,16 +57,22 @@ const order& orderPool::operator[](orderIdType orderId)
  * 
  *****************************************************************/
 
-orderBook::orderBook(lib::symbol symbol, orderPool& op)
+orderBook::orderBook(lib::symbol symbol, orderIdType maxOrderId)
 {
-    m_orderPool = std::make_shared<orderPool>(op);
+    m_orderPool = std::make_unique<orderPool>(maxOrderId);
 }
 
 template <>
-askBookType& orderBook::getMap() { return m_asks; }
+askBookType& orderBook::getBook() { return m_asks; }
 
 template <>
-bidBookType& orderBook::getMap() { return m_bids; }
+bidBookType& orderBook::getBook() { return m_bids; }
+
+template<>
+order2askBookType& orderBook::getOrder2BookMap() { return m_order2askBook; }
+
+//template<>
+//order2bidBookType& orderBook::getOrder2BookMap() { return m_order2bidBook; }
 
 template<>
 bool orderBook::priceCross(const Price4& p, const askBookType& askBook) const { return (*askBook.begin()).first <= p; };

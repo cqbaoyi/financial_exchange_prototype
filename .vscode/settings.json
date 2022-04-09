@@ -57,6 +57,7 @@
         "forward_list": "cpp",
         "valarray": "cpp",
         "thread": "cpp",
-        "variant": "cpp"
+        "variant": "cpp",
+        "unordered_set": "cpp"
     }
 }

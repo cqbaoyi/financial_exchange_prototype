@@ -18,8 +18,7 @@ private:
 
 public:
     orderPool() = default;
-    
-    void reserve(orderIdType maxOrderId);
+    explicit orderPool(orderIdType maxOrderId);
 
     // Add an order, which has a positive remaining quantity after matching, to the pool
     void add(const order& od);
@@ -33,19 +32,39 @@ public:
     const order& operator[](orderIdType orderId);
 };
 
+namespace std
+{
+    // Enable std::list<orderIdType>::iterator as a key to an unordered_map
+    template<> struct hash<std::list<orderIdType>::iterator>
+    {
+        std::size_t operator()(std::list<orderIdType>::iterator const& iter) const noexcept
+        {
+            return  (std::size_t)&(*iter);
+        }
+    };
+} 
+
 typedef std::map<Price4, std::list<orderIdType>> askBookType;
 typedef std::map<Price4, std::list<orderIdType>, std::greater<Price4>> bidBookType;
+typedef std::unordered_map<std::list<orderIdType>::iterator, askBookType::iterator> order2askBookType;
+typedef std::unordered_map<std::list<orderIdType>::iterator, bidBookType::iterator> order2bidBookType;
+
 class orderBook
 {
 private:
     askBookType m_asks;    // price -> linked list of orderId
     bidBookType m_bids;    // price -> linked list of orderId  
-    std::unordered_map<orderIdType, std::list<orderIdType>::iterator> m_orderIt;    // orderId -> linked list iterator
+    std::unordered_map<orderIdType, std::list<orderIdType>::iterator> m_orderIt;    // orderId -> order iterator
+    order2askBookType m_order2askBook;    // order iterator -> askBook iterator
+    order2bidBookType m_order2bidBook;    // order iterator -> bidBook iterator
     lib::symbol m_symbol;
-    std::shared_ptr<orderPool> m_orderPool;
+    std::unique_ptr<orderPool> m_orderPool;
 
     template<typename T>
-    T& getMap();
+    T& getBook();
+
+    template<typename T>
+    T& getOrder2BookMap();
 
     // Determine whether there is a price cross based on T
     template<typename T>
@@ -53,28 +72,29 @@ private:
 
 public:
     orderBook() = default;
-    explicit orderBook(lib::symbol symbol, orderPool& op);
+    explicit orderBook(lib::symbol symbol, orderIdType maxOrderId);
 
     // Match an order against the other side of the book.
     // Return the remaining quantity if not fully filled.
-    template<typename T>
+    template<typename T, typename T2>
     orderQuantityType match(const order& od);
 
     // A new order, after being matched, is added to the book.
-    // If it is a new price level, O(log M) where M is the number of price levels. Otherwise, O(1).
-    template<typename T>
+    // O(log M) where M is the number of price levels.
+    template<typename T, typename T2>
     void add(const order& od);
 
     // A cancel order is received or an existing order on the book is filled.
-    // Amortized O(1)
-    template<typename T>
-    void remove(orderIdType orderId);
+    // Return whether a price level is removed.
+    // O(1)
+    template<typename T, typename T2>
+    bool remove(orderIdType orderId);
 };
 
-template<typename T>
+template<typename T, typename T2>
 orderQuantityType orderBook::match(const order& od)
 {
-    auto& curBook = getMap<T>();
+    auto& curBook = getBook<T>();
     orderQuantityType remaining_quantity = od.get_quantity();
     const Price4& p = od.get_Price4();
 
@@ -82,14 +102,15 @@ orderQuantityType orderBook::match(const order& od)
     while(remaining_quantity && !curBook.empty() && priceCross(p, curBook))
     {
         auto& orders_this_level = (*curBook.begin()).second;
-        auto it = orders_this_level.begin();
+        std::list<orderIdType>::iterator it = orders_this_level.begin();
         while(remaining_quantity && it != orders_this_level.end())
         {
             orderQuantityType q = (*m_orderPool)[*it].get_quantity();
             if (q <= remaining_quantity)
             {
                 remaining_quantity -= q;
-                remove<T>(*it);
+                if (remove<T, T2>(*it))    // The price level is removed
+                    break;
                 ++it;
             }
             else
@@ -99,14 +120,12 @@ orderQuantityType orderBook::match(const order& od)
                 (*m_orderPool).modifyQuantity(*it, q);
             }
         }
-        if (it == orders_this_level.end())   // Erase the price level
-            curBook.erase(curBook.begin());
     }
 
     return remaining_quantity;
 }
 
-template<typename T>
+template<typename T, typename T2>
 void orderBook::add(const order& od)
 {
     orderIdType orderId = od.get_orderId();
@@ -114,37 +133,51 @@ void orderBook::add(const order& od)
     (*m_orderPool).add(od);
 
     const Price4& p = od.get_Price4();
-    auto& curBook = getMap<T>();
+    auto& curBook = getBook<T>();
+    auto& order2BookMap = getOrder2BookMap<T2>();
 
     std::list<orderIdType>::iterator it;
-    if (curBook.find(p) == curBook.end())
+    typename T::iterator price_it = curBook.find(p);
+    if (price_it == curBook.end())    // A new top price level
     {
-        curBook.insert({p, std::list<orderIdType>{orderId}});
-        it = curBook[p].begin();
+        auto [new_price_it, success] = curBook.insert({p, std::list<orderIdType>{orderId}});
+        it = new_price_it->second.begin();
+        order2BookMap[it] = new_price_it;
     }
     else
     {
-        auto& l = curBook[p];
-        it = l.insert(l.end(), orderId);
+        it = price_it->second.insert(price_it->second.end(), orderId);
+        order2BookMap[it] = price_it;
     }
 
     m_orderIt[orderId] = it;
 }
 
-template<typename T>
-void orderBook::remove(orderIdType orderId)
+template<typename T, typename T2>
+bool orderBook::remove(orderIdType orderId)
 {
+    bool erase_price_level = false;
+
     try
     {
         const order& od = (*m_orderPool)[orderId];
         const Price4& p = od.get_Price4();
-        auto& curBook = getMap<T>();
+        auto& curBook = getBook<T>();
 
-        std::list<orderIdType>::iterator it = m_orderIt[orderId];
-        curBook[p].erase(it);
-        // Do not erase the price level
+        auto& order2BookMap = getOrder2BookMap<T2>();
+        {
+            std::list<orderIdType>::iterator it = m_orderIt[orderId];
+            auto price_it = order2BookMap[it];
+            price_it->second.erase(it);
+            if (price_it->second.empty())    // No orders at this price level
+            {
+                curBook.erase(price_it);
+                erase_price_level = true;
+            }
+            order2BookMap.erase(it);
+            m_orderIt.erase(orderId);
+        }
 
-        m_orderIt.erase(orderId);
         (*m_orderPool).remove(orderId);
     }
     catch(const std::exception& e)
@@ -152,5 +185,5 @@ void orderBook::remove(orderIdType orderId)
         std::cerr << e.what() << '\n';
     }
     
-    
+    return erase_price_level;
 }

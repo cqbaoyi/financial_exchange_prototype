@@ -1,19 +1,20 @@
 #pragma once
 
+#include"Event.hpp"
 #include"orderBook.hpp"
 
-class matchingEngine
+class MatchingEngine: public Observable<MatchingEngine>
 {
 private:
     std::vector<std::unique_ptr<orderBook>> m_orderBooks;
+    EventBlotter m_eventBlotter;
 
 public:
-    matchingEngine() = default;
-    explicit matchingEngine(orderIdType maxOrderId);
+    MatchingEngine() = default;
+    explicit MatchingEngine(orderIdType maxOrderId);
 
     // Serve an incoming order by orderId and return a Boolean
-    // TODO: 
-    // 1) integrate the market data publisher
-    // 2) multithreading
     void serve(order& od);
+
+    EventBlotter& get_eventBlotter();
 };

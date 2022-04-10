@@ -1,6 +1,6 @@
-#include"matchingEngine.hpp"
+#include"MatchingEngine.hpp"
 
-matchingEngine::matchingEngine(orderIdType maxOrderId)
+MatchingEngine::MatchingEngine(orderIdType maxOrderId)
 {
     // Each symbol has an independent order book.
     m_orderBooks.reserve(lib::N_symbol);
@@ -8,12 +8,12 @@ matchingEngine::matchingEngine(orderIdType maxOrderId)
         m_orderBooks.emplace_back(std::make_unique<orderBook>(static_cast<lib::symbol>(i), maxOrderId));
 }
 
-void matchingEngine::serve(order& od)
+void MatchingEngine::serve(order& od)
 {
     lib::symbol symbol = od.get_symbol();
     bool isCancel = od.get_orderType() == lib::orderType::CANCEL;
     bool isAskOrder = od.get_orderSide() == lib::orderSide::ASK;
-    
+
     if (isCancel)
     {
         orderIdType orderId = od.get_orderId();
@@ -36,4 +36,12 @@ void matchingEngine::serve(order& od)
         else
             (*m_orderBooks[static_cast<uint32_t>(symbol)]).add<bidBookType, order2bidBookType>(od);
     }
+
+    notify(*this);
+    m_eventBlotter.clear();
+}
+
+EventBlotter& MatchingEngine::get_eventBlotter()
+{
+    return m_eventBlotter;
 }

@@ -30,9 +30,25 @@ namespace lib
         CSCO = 5,
     };
     static std::array<std::string, N_symbol> symbolStr = {"NA", "AAPL", "MSFT", "NVDA", "AVGO", "CSCO"};
+
+    constexpr uint32_t N_event = 2;
+    enum class event: uint32_t {
+        NA = 0,
+        DEPTH_UPDATE = 1,
+    };
+    static std::array<std::string, N_event> eventStr = {"NA", "DEPTH_UPDATE"};
+
+    constexpr uint32_t N_action = 4;
+    enum class action: uint32_t {
+        NA = 0,
+        ADD = 1,
+        MODIFY = 2,
+        DELETE = 3,
+    };
+    static std::array<std::string, N_action> actionStr = {"NA", "ADD", "MODIFY", "DELETE"};
 }
 
-inline std::ostream& operator<<(std::ostream & os, lib::orderType & orderType)
+inline std::ostream& operator<<(std::ostream& os, lib::orderType & orderType)
 {
     switch(orderType)
     { 
@@ -42,7 +58,7 @@ inline std::ostream& operator<<(std::ostream & os, lib::orderType & orderType)
     }
 }
 
-inline std::ostream& operator<<(std::ostream & os, lib::orderSide & orderSide)
+inline std::ostream& operator<<(std::ostream& os, lib::orderSide & orderSide)
 {
     switch(orderSide)
     {
@@ -52,7 +68,7 @@ inline std::ostream& operator<<(std::ostream & os, lib::orderSide & orderSide)
     }
 }
 
-inline std::ostream& operator<<(std::ostream & os, lib::symbol & symbol)
+inline std::ostream& operator<<(std::ostream& os, lib::symbol & symbol)
 {
     switch(symbol)
     {
@@ -62,5 +78,16 @@ inline std::ostream& operator<<(std::ostream & os, lib::symbol & symbol)
         case lib::symbol::NVDA: return os << "NVDA";
         case lib::symbol::AVGO: return os << "AVGO";
         case lib::symbol::CSCO: return os << "CSCO";
+    }
+}
+
+inline std::ostream& operator<<(std::ostream& os, lib::action& action)
+{
+    switch(action)
+    {
+        case lib::action::NA: return os << "NA";
+        case lib::action::ADD: return os << "ADD";
+        case lib::action::MODIFY: return os << "MODIFY";
+        case lib::action::DELETE: return os << "DELETE";
     }
 }

@@ -4,10 +4,12 @@
 #include<list>
 #include<map>
 #include<string>
-//#include<vector>
+#include<vector>
 #include<unordered_map>
 
 #include"enum.hpp"
+#include"Event.hpp"
+#include"Observable.hpp"
 #include"order.hpp"
 #include"Price4.hpp"
 
@@ -85,7 +87,7 @@ public:
     void add(const order& od);
 
     // A cancel order is received or an existing order on the book is filled.
-    // Return whether a price level is removed.
+    // Return 1) whether a price level is to remove, 2) Price4, and 3) quantity.
     // O(1)
     template<typename T, typename T2>
     bool remove(orderIdType orderId);
@@ -98,19 +100,23 @@ orderQuantityType orderBook::match(const order& od)
     orderQuantityType remaining_quantity = od.get_quantity();
     const Price4& p = od.get_Price4();
 
-    // TODO: keep track of the filled prices and use them for the market data publisher
     while(remaining_quantity && !curBook.empty() && priceCross(p, curBook))
     {
+        auto cur_p = (*curBook.begin()).first;
         auto& orders_this_level = (*curBook.begin()).second;
         std::list<orderIdType>::iterator it = orders_this_level.begin();
+
         while(remaining_quantity && it != orders_this_level.end())
         {
             orderQuantityType q = (*m_orderPool)[*it].get_quantity();
             if (q <= remaining_quantity)
             {
                 remaining_quantity -= q;
-                if (remove<T, T2>(*it))    // The price level is removed
+                bool removed = remove<T, T2>(*it);
+                if (removed)    // The price level is removed
+                {
                     break;
+                }
                 ++it;
             }
             else
@@ -158,32 +164,25 @@ bool orderBook::remove(orderIdType orderId)
 {
     bool erase_price_level = false;
 
-    try
-    {
-        const order& od = (*m_orderPool)[orderId];
-        const Price4& p = od.get_Price4();
-        auto& curBook = getBook<T>();
+    const order& od = (*m_orderPool)[orderId];
+    const Price4& p = od.get_Price4();
+    auto& curBook = getBook<T>();
 
-        auto& order2BookMap = getOrder2BookMap<T2>();
+    auto& order2BookMap = getOrder2BookMap<T2>();
+    {
+        std::list<orderIdType>::iterator it = m_orderIt[orderId];
+        auto price_it = order2BookMap[it];
+        price_it->second.erase(it);
+        if (price_it->second.empty())    // No orders at this price level
         {
-            std::list<orderIdType>::iterator it = m_orderIt[orderId];
-            auto price_it = order2BookMap[it];
-            price_it->second.erase(it);
-            if (price_it->second.empty())    // No orders at this price level
-            {
-                curBook.erase(price_it);
-                erase_price_level = true;
-            }
-            order2BookMap.erase(it);
-            m_orderIt.erase(orderId);
+            curBook.erase(price_it);
+            erase_price_level = true;
         }
+        order2BookMap.erase(it);
+        m_orderIt.erase(orderId);
+    }
 
-        (*m_orderPool).remove(orderId);
-    }
-    catch(const std::exception& e)
-    {
-        std::cerr << e.what() << '\n';
-    }
-    
+    (*m_orderPool).remove(orderId);
+
     return erase_price_level;
 }

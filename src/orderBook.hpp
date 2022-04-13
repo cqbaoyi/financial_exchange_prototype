@@ -34,22 +34,10 @@ public:
     const order& operator[](orderIdType orderId);
 };
 
-namespace std
-{
-    // Enable std::list<orderIdType>::iterator as a key to an unordered_map
-    template<> struct hash<std::list<orderIdType>::iterator>
-    {
-        std::size_t operator()(std::list<orderIdType>::iterator const& iter) const noexcept
-        {
-            return  (std::size_t)&(*iter);
-        }
-    };
-} 
-
 typedef std::map<Price4, std::list<orderIdType>> askBookType;
 typedef std::map<Price4, std::list<orderIdType>, std::greater<Price4>> bidBookType;
-typedef std::unordered_map<std::list<orderIdType>::iterator, askBookType::iterator> order2askBookType;
-typedef std::unordered_map<std::list<orderIdType>::iterator, bidBookType::iterator> order2bidBookType;
+typedef std::unordered_map<orderIdType, askBookType::iterator> order2askBookType;
+typedef std::unordered_map<orderIdType, bidBookType::iterator> order2bidBookType;
 
 class orderBook
 {
@@ -148,12 +136,12 @@ void orderBook::add(const order& od)
     {
         auto [new_price_it, success] = curBook.insert({p, std::list<orderIdType>{orderId}});
         it = new_price_it->second.begin();
-        order2BookMap[it] = new_price_it;
+        order2BookMap[orderId] = new_price_it;
     }
     else
     {
         it = price_it->second.insert(price_it->second.end(), orderId);
-        order2BookMap[it] = price_it;
+        order2BookMap[orderId] = price_it;
     }
 
     m_orderIt[orderId] = it;
@@ -171,14 +159,14 @@ bool orderBook::remove(orderIdType orderId)
     auto& order2BookMap = getOrder2BookMap<T2>();
     {
         std::list<orderIdType>::iterator it = m_orderIt[orderId];
-        auto price_it = order2BookMap[it];
+        auto price_it = order2BookMap[orderId];
         price_it->second.erase(it);
         if (price_it->second.empty())    // No orders at this price level
         {
             curBook.erase(price_it);
             erase_price_level = true;
         }
-        order2BookMap.erase(it);
+        order2BookMap.erase(orderId);
         m_orderIt.erase(orderId);
     }
 

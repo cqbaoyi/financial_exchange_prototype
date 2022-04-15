@@ -4,5 +4,5 @@ template<typename T>
 class Observer
 {
 public:
-    virtual void event_occurred(T& source) = 0;
+    virtual void publish(T& source) = 0;
 };

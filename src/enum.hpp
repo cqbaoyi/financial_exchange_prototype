@@ -31,12 +31,13 @@ namespace lib
     };
     static std::array<std::string, N_symbol> symbolStr = {"NA", "AAPL", "MSFT", "NVDA", "AVGO", "CSCO"};
 
-    constexpr uint32_t N_event = 2;
+    constexpr uint32_t N_event = 3;
     enum class event: uint32_t {
         NA = 0,
-        DEPTH_UPDATE = 1,
+        TRADE = 1,
+        DEPTH_UPDATE = 2,
     };
-    static std::array<std::string, N_event> eventStr = {"NA", "DEPTH_UPDATE"};
+    static std::array<std::string, N_event> eventStr = {"NA", "TRADE", "DEPTH_UPDATE"};
 
     constexpr uint32_t N_action = 4;
     enum class action: uint32_t {

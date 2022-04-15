@@ -56,6 +56,9 @@ private:
     template<typename T>
     orderId2BookIt& getOrderId2BookIt();
 
+    template<typename T>
+    lib::orderSide getCurBookSide();
+
     // Determine whether there is a price cross based on T
     template<typename T>
     bool priceCross(const Price4& p, const T& book) const;
@@ -67,22 +70,22 @@ public:
     // Match an order against the other side of the book.
     // Return the remaining quantity if not fully filled.
     template<typename T>
-    orderQuantityType match(const order& od);
+    orderQuantityType match(const order& od, EventBlotter& eventBlotter);
 
     // A new order, after being matched, is added to the book.
     // O(log M) where M is the number of price levels.
     template<typename T>
-    void add(const order& od);
+    void add(const order& od, EventBlotter& eventBlotter);
 
     // A cancel order is received or an existing order on the book is filled.
     // Return 1) whether a price level is to remove, 2) Price4, and 3) quantity.
     // O(1)
     template<typename T>
-    bool remove(orderIdType orderId);
+    bool remove(orderIdType orderId, EventBlotter& eventBlotter);
 };
 
 template<typename T>
-orderQuantityType orderBook::match(const order& od)
+orderQuantityType orderBook::match(const order& od, EventBlotter& eventBlotter)
 {
     auto& curBook = getBook<T>();
     orderQuantityType remaining_quantity = od.get_quantity();
@@ -100,7 +103,7 @@ orderQuantityType orderBook::match(const order& od)
             if (q <= remaining_quantity)
             {
                 remaining_quantity -= q;
-                bool removed = remove<T>(*it);
+                bool removed = remove<T>(*it, eventBlotter);
                 if (removed)    // The price level is removed
                 {
                     break;
@@ -120,9 +123,11 @@ orderQuantityType orderBook::match(const order& od)
 }
 
 template<typename T>
-void orderBook::add(const order& od)
+void orderBook::add(const order& od, EventBlotter& eventBlotter)
 {
+    lib::orderSide bookSide = getCurBookSide<T>();
     orderIdType orderId = od.get_orderId();
+    orderQuantityType orderQuantity = od.get_quantity();
     // Add to the order pool
     (*m_orderPool).add(od);
 
@@ -132,7 +137,8 @@ void orderBook::add(const order& od)
 
     std::list<orderIdType>::iterator it;
     typename T::iterator price_it = curBook.find(p);
-    if (price_it == curBook.end())    // A new top price level
+    bool newPriceLevel = price_it == curBook.end();
+    if (newPriceLevel)    // A new price level
     {
         auto [new_price_it, success] = curBook.insert({p, std::list<orderIdType>{orderId}});
         it = new_price_it->second.begin();
@@ -144,15 +150,20 @@ void orderBook::add(const order& od)
         order2BookMap[orderId] = price_it;
     }
 
+    // The event is either ADD or MODIFY.
+    eventBlotter.addEvent(Event(newPriceLevel? lib::action::ADD: lib::action::MODIFY, p, orderQuantity, bookSide));
+
     m_orderIt[orderId] = it;
 }
 
 template<typename T>
-bool orderBook::remove(orderIdType orderId)
+bool orderBook::remove(orderIdType orderId, EventBlotter& eventBlotter)
 {
     bool erase_price_level = false;
 
+    lib::orderSide bookSide = getCurBookSide<T>();
     const order& od = (*m_orderPool)[orderId];
+    orderQuantityType orderQuantity = od.get_quantity();
     const Price4& p = od.get_Price4();
     auto& curBook = getBook<T>();
 
@@ -171,6 +182,9 @@ bool orderBook::remove(orderIdType orderId)
     }
 
     (*m_orderPool).remove(orderId);
+
+    // The event is either DELETE or MODIFY.
+    eventBlotter.addEvent(Event(erase_price_level? lib::action::DELETE: lib::action::MODIFY, p, orderQuantity, bookSide));
 
     return erase_price_level;
 }

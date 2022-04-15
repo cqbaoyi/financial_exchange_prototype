@@ -4,31 +4,42 @@
 #include"order.hpp"
 #include"Price4.hpp"
 
-// Price level event
+// A Event object should have the finest level of information, which might be an overkill right now.
+// How to process all the events is the Observers' responsibility.
 class Event
 {
 public:
-    Price4 m_Price4;
-    orderQuantityType m_quantity;
     lib::action m_action;
+    Price4 m_price;
+    orderQuantityType m_quantity;
+    lib::orderSide m_orderSide;
 
-    explicit Event(Price4 p, 
-        orderQuantityType q, 
-        lib::action a): 
-        m_Price4(p), 
-        m_quantity(q), 
-        m_action(a)
+    explicit Event(lib::action action,
+                   Price4 price,
+                   orderQuantityType quantity,
+                   lib::orderSide orderSide):
+                   m_action(action),
+                   m_price(price),
+                   m_quantity(quantity),
+                   m_orderSide(orderSide)
     {}
 };
 
-struct EventBlotter
+// Conversion to json
+void to_json(json& j, const Event& event);
+
+class EventBlotter
 {
 public:
-    std::vector<Event> m_bid_events, m_ask_events;
+    // One price level has one total quantity.
+    std::vector<Event> m_events;
+    
+    EventBlotter() = default;
 
-    inline void clear() 
+    void addEvent(Event&& event);
+
+    inline void clear()
     {
-        m_bid_events.clear();
-        m_ask_events.clear();
+        m_events.clear();
     }
 };

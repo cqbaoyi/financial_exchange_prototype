@@ -68,18 +68,17 @@ askBookType& orderBook::getBook() { return m_asks; }
 template <>
 bidBookType& orderBook::getBook() { return m_bids; }
 
-//template<>
-//order2askBookType& orderBook::getOrder2BookMap() { return m_order2askBook; }
-
-// TODO: specialization redefinition error
-//template<>
-//order2bidBookType& orderBook::getOrder2BookMap() { return m_order2bidBook; }
-
 template<>
 orderId2BookIt& orderBook::getOrderId2BookIt<askBookType>(){ return m_orderId2AskBookIt; }
 
 template<>
 orderId2BookIt& orderBook::getOrderId2BookIt<bidBookType>(){ return m_orderId2BidBookIt; }
+
+template<>
+lib::orderSide orderBook::getCurBookSide<askBookType>(){ return lib::orderSide::ASK; };
+
+template<>
+lib::orderSide orderBook::getCurBookSide<bidBookType>(){ return lib::orderSide::BID; };
 
 template<>
 bool orderBook::priceCross(const Price4& p, const askBookType& askBook) const { return (*askBook.begin()).first <= p; };

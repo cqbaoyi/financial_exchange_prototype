@@ -58,3 +58,12 @@ inline std::ostream& operator<<(std::ostream& os, const Price4& price4)
 {
     return os << price4.to_str();
 }
+
+struct Price4Hash
+{
+    std::int64_t operator()(Price4 const& p) const noexcept
+    {
+        return std::hash<std::int64_t>{}(p.unscaled());
+    }
+};
+ 

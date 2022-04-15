@@ -7,7 +7,7 @@
 class mktDataPublisher: public Observer<MatchingEngine>
 {
 private:
-    void event_occurred(MatchingEngine& matchingEngine) override;
+    void publish(MatchingEngine& matchingEngine) override;
 
 public:
     mktDataPublisher() = default;

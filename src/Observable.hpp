@@ -15,7 +15,7 @@ public:
     void notify(T& source)
     {
         for (auto& observer: observers)
-            observer->event_occurred(source);
+            observer->publish(source);
     }
 
     void subscribe(Observer<T>& observer)

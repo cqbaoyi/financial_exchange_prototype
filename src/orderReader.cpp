@@ -10,7 +10,7 @@ orderReader::orderReader(lib::symbol symbol): m_symbol(symbol)
     m_fileName = "orders_" + lib::symbolStr[static_cast<uint32_t>(symbol)] + ".json";
 }
 
-void orderReader::run()
+void orderReader::run(MatchingEngine& matchingEngine)
 {
     std::fstream f(m_fileName, std::ios::in);
 
@@ -25,7 +25,8 @@ void orderReader::run()
         {
             j = json::parse(line);
             od = j;
-            od.print_info();
+            matchingEngine.serve(od);
+            //od.print_info();
         }
         catch (json::parse_error& ex)
         {

@@ -11,28 +11,9 @@
 #include"Event.hpp"
 #include"Observable.hpp"
 #include"order.hpp"
+#include"orderPool.hpp"
 #include"Price4.hpp"
 
-class orderPool
-{
-private:
-    std::unordered_map<orderIdType, order> m_orders;    // orderId -> order
-
-public:
-    orderPool() = default;
-    explicit orderPool(orderIdType maxOrderId);
-
-    // Add an order, which has a positive remaining quantity after matching, to the pool
-    void add(const order& od);
-
-    // Remove an order from the pool
-    void remove(orderIdType orderId);
-
-    // Modify the quantity of an existing order.
-    void modifyQuantity(orderIdType orderId, orderQuantityType quantity);
-
-    const order& operator[](orderIdType orderId);
-};
 
 typedef std::map<Price4, std::list<orderIdType>> askBookType;
 typedef std::map<Price4, std::list<orderIdType>, std::greater<Price4>> bidBookType;
@@ -48,7 +29,7 @@ private:
     orderId2BookIt m_orderId2AskBookIt;    // orderId -> ask book iterator
     orderId2BookIt m_orderId2BidBookIt;    // orderId -> bid book iterator
     lib::symbol m_symbol;
-    std::unique_ptr<orderPool> m_orderPool;
+    std::shared_ptr<orderPool> m_orderPool;
 
     template<typename T>
     T& getBook();
@@ -65,7 +46,8 @@ private:
 
 public:
     orderBook() = default;
-    explicit orderBook(lib::symbol symbol, orderIdType maxOrderId);
+    explicit orderBook(lib::symbol symbol, std::shared_ptr<orderPool> op): m_orderPool(op)
+    {}
 
     // Match an order against the other side of the book.
     // Return the remaining quantity if not fully filled.

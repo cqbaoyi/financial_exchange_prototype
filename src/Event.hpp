@@ -4,7 +4,7 @@
 #include"order.hpp"
 #include"Price4.hpp"
 
-// A Event object should have the finest level of information, which might be an overkill right now.
+// An Event object should have the finest level of information, which might be an overkill right now.
 // How to process all the events is the Observers' responsibility.
 class Event
 {

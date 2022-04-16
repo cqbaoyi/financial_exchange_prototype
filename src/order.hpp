@@ -28,10 +28,11 @@ private:
 
 public:
     order() = default;
+    // A CANCEL order could skip orderSide, quantity, and limitPrice.
     explicit order(const std::chrono::time_point<Clock>& timeStamp,
         orderIdType orderId, 
         const lib::orderType& oT, 
-        const lib::symbol& symbol = lib::symbol::NA, 
+        const lib::symbol& symbol, 
         const lib::orderSide& os = lib::orderSide::NA, 
         orderQuantityType quantity = 0, 
         int64_t limitPrice = 0): 

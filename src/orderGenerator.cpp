@@ -87,10 +87,10 @@ void orderGenerator::run()
         if (m_orderIds.empty() || orderType == lib::orderType::NEW)
         {
             m_orderIds.insert(globalOrderId);
-            myOrder = order(t, globalOrderId++, orderType, m_symbol, genOrderSide(), genQuantity(), genPrice());
+            myOrder = order(t, globalOrderId++, lib::orderType::NEW, m_symbol, genOrderSide(), genQuantity(), genPrice());
         }
         else
-            myOrder = order(t, genCancelOrderId(), orderType);
+            myOrder = order(t, genCancelOrderId(), orderType, m_symbol);
         json j = myOrder;
         f << j << std::endl;
     }

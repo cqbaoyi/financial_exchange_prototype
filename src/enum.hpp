@@ -6,11 +6,13 @@
 
 namespace lib
 {
+    constexpr uint32_t N_orderType = 3;
     enum class orderType: uint32_t {
         NA = 0,
         NEW = 1,
         CANCEL = 2,
     };
+    static std::array<std::string, N_orderType> orderTypeStr = {"NA", "NEW", "CANCEL"};
 
     constexpr uint32_t N_orderSide = 3;
     enum class orderSide: uint32_t {

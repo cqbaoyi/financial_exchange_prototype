@@ -2,6 +2,8 @@
 
 #include<string>
 
+#include"MatchingEngine.hpp"
+
 class orderReader
 {
 private:
@@ -10,5 +12,5 @@ private:
 public:
     orderReader() = default;
     orderReader(lib::symbol symbol);
-    void run();
+    void run(MatchingEngine& matchingEngine);
 };
